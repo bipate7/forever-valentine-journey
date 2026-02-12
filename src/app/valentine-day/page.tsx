@@ -51,6 +51,8 @@ export default function ValentineDay() {
   const [showRoseRain, setShowRoseRain] = useState(false);
   const [showHeartsExplosion, setShowHeartsExplosion] = useState(false);
   const [currentLoveQuote, setCurrentLoveQuote] = useState(0);
+  const [show3DHearts, setShow3DHearts] = useState(false);
+  const [heartRotation, setHeartRotation] = useState({ x: 0, y: 0, z: 0 });
   const [countdown, setCountdown] = useState({
     days: 0,
     hours: 0,
@@ -66,36 +68,22 @@ export default function ValentineDay() {
     "You are my today and all of my tomorrows",
     "Forever is a long time, but I wouldn't mind spending it with you",
     "You are the missing piece to my heart's puzzle",
-    "Love is not finding someone to live with, it's finding someone you can't live without"
+    "Love is not finding someone to live with, it's finding someone you can't live without",
+    "I Love Youuuuu Anuuu <3",
+    "You make my world complete in every way",
+    "With you, every moment is Valentine's Day",
+    "Your love is my favorite kind of magic"
   ];
 
   useEffect(() => {
-    // Calculate time until February 14 (Valentine's Day)
-    const targetDate = new Date();
-    targetDate.setMonth(1, 14); // February 14
-    targetDate.setFullYear(targetDate.getFullYear());
-    if (targetDate < new Date()) {
-      targetDate.setFullYear(targetDate.getFullYear() + 1);
-    }
-    targetDate.setHours(0, 0, 0, 0);
-
-    const countdownTimer = setInterval(() => {
-      const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
-
-      if (difference > 0) {
-        setCountdown({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((difference % (1000 * 60)) / 1000),
-          isLocked: true
-        });
-      } else {
-        setCountdown(prev => ({ ...prev, isLocked: false }));
-        clearInterval(countdownTimer);
-      }
-    }, 1000);
+    // Always unlock Valentine's Day - no countdown needed
+    setCountdown({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isLocked: false
+    });
 
     // Create floating hearts
     const heartArray = Array.from({ length: 30 }, (_, i) => ({
@@ -238,6 +226,18 @@ export default function ValentineDay() {
     setTimeout(() => {
       setShowHeartsExplosion(false);
     }, 3000);
+  };
+
+  const trigger3DHearts = () => {
+    setShow3DHearts(true);
+    setTimeout(() => setShow3DHearts(false), 8000);
+  };
+
+  const handle3DMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -2;
+    setHeartRotation({ x: y, y: x, z: x * y });
   };
 
   return (
@@ -622,6 +622,25 @@ export default function ValentineDay() {
             </motion.button>
           </div>
 
+          {/* 3D Hearts Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="mb-8"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={trigger3DHearts}
+              className="bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all"
+            >
+              <span className="text-2xl mb-3">💕</span>
+              <p className="font-bold text-lg">3D Hearts</p>
+              <p className="text-sm opacity-90">Magical 3D experience!</p>
+            </motion.button>
+          </motion.div>
+
           {/* Love Letter Modal */}
           <AnimatePresence>
             {showLoveLetter && (
@@ -735,6 +754,116 @@ export default function ValentineDay() {
                   </motion.div>
                 ))}
               </div>
+            )}
+          </AnimatePresence>
+
+          {/* 3D Hearts Effect Modal */}
+          <AnimatePresence>
+            {show3DHearts && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+              >
+                <motion.div
+                  initial={{ rotateX: 0, rotateY: 0 }}
+                  animate={{ rotateX: 360, rotateY: 360 }}
+                  transition={{ duration: 4, repeat: 2, ease: "linear" }}
+                  className="relative"
+                  style={{ 
+                    transformStyle: 'preserve-3d',
+                    perspective: '1000px'
+                  }}
+                  onMouseMove={handle3DMouseMove}
+                >
+                  <div className="relative w-64 h-64 md:w-80 md:h-80">
+                    {/* 3D Heart */}
+                    <motion.div
+                      animate={{ 
+                        rotateX: heartRotation.x * 30,
+                        rotateY: heartRotation.y * 30,
+                        rotateZ: heartRotation.z * 20
+                      }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      className="absolute inset-0 bg-gradient-to-br from-red-500 via-pink-400 to-purple-500 rounded-2xl shadow-2xl border-4 border-pink-300"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        boxShadow: '0 25px 50px rgba(255,105,180,0.4), inset 0 4px 8px rgba(255,255,255,0.3)'
+                      }}
+                    >
+                      {/* Heart Texture */}
+                      <div className="absolute inset-0 rounded-2xl opacity-30">
+                        <div className="grid grid-cols-4 grid-rows-4 h-full">
+                          {Array.from({ length: 16 }, (_, i) => (
+                            <div
+                              key={i}
+                              className="border border-pink-300/20"
+                              style={{
+                                background: `radial-gradient(circle at ${Math.random() * 100}% ${Math.random() * 100}%, rgba(255,255,255,0.2) 0%, transparent 70%)`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Floating Elements */}
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-4xl animate-pulse">💕</div>
+                      <div className="absolute -bottom-4 right-4 text-4xl animate-bounce">💖</div>
+                      <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 text-4xl animate-spin">✨</div>
+                      
+                      {/* Love Message */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="text-white text-xl md:text-2xl font-bold text-center"
+                          style={{ fontFamily: 'var(--font-lobster)' }}
+                        >
+                          {"💕 I Love Youuuuu Anuuu <3 💕"}
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                    
+                    {/* Floating Hearts Around */}
+                    {[...Array(12)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ 
+                          opacity: [0, 1, 0],
+                          scale: [0, 1, 0],
+                          rotate: [0, 360],
+                          z: [0, 100, 0]
+                        }}
+                        transition={{ 
+                          duration: 4,
+                          repeat: Infinity,
+                          delay: i * 0.2
+                        }}
+                        className="absolute text-2xl"
+                        style={{
+                          top: `${50 + Math.cos((i * Math.PI * 2) / 12) * 80}%`,
+                          left: `${50 + Math.sin((i * Math.PI * 2) / 12) * 80}%`,
+                          transform: 'translate(-50%, -50%)'
+                        }}
+                      >
+                        💕
+                      </motion.div>
+                    ))}
+                  </div>
+                  
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-white text-center bg-gradient-to-r from-pink-500/80 to-red-500/80 px-6 py-3 rounded-full"
+                    style={{ fontFamily: 'var(--font-pacifico)' }}
+                  >
+                    Forever 3D Love for Anuu! 💕
+                  </motion.p>
+                </motion.div>
+              </motion.div>
             )}
           </AnimatePresence>
 

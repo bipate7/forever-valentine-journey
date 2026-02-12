@@ -31,6 +31,20 @@ const kissMoments = [
   { id: 6, title: "Gentle Kisses", description: "Soft as butterfly wings", emoji: "🦋" }
 ];
 
+const naughtyQuestions = [
+  { id: 1, question: "Where would you want our next kiss to be?", options: ["Under the stars", "In the rain", "On the beach", "Right now 😏"] },
+  { id: 2, question: "What's your favorite type of kiss?", options: ["Slow & passionate", "Quick & sweet", "Playful & teasing", "All of the above 💋"] },
+  { id: 3, question: "What do kisses taste like with me?", options: ["Sweet honey", "Chocolate", "Forever", "Pure magic ✨"] },
+  { id: 4, question: "How many kisses do you want today?", options: ["Just one", "A dozen", "Hundreds", "Infinite 💕"] },
+  { id: 5, question: "What's the naughtiest place you want to kiss me?", options: ["Lips", "Neck", "Collarbone", "Everywhere 🔥"] },
+  { id: 6, question: "What happens after our kisses?", options: ["More kisses", "Cuddles", "Sweet dreams", "Forever begins 💝"] },
+  { 
+    id: 7, 
+    question: "If Karan is filled with chocolate from head to toe, would you kiss him like this?", 
+    options: ["Lick it all slowly 😋", "Bite gently everywhere 🍫", "Passionate chocolate kisses 🍫", "All of the above and more! 🔥"] 
+  }
+];
+
 export default function KissDay() {
   const { isPlaying, playMusic } = useMusic();
   const [showFinalMessage, setShowFinalMessage] = useState(false);
@@ -39,6 +53,11 @@ export default function KissDay() {
   const [currentMessage, setCurrentMessage] = useState(0);
   const [showKissRain, setShowKissRain] = useState(false);
   const [currentMoment, setCurrentMoment] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showChocolateKaran, setShowChocolateKaran] = useState(false);
+  const [chocolateRotation, setChocolateRotation] = useState({ x: 0, y: 0 });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -114,6 +133,34 @@ export default function KissDay() {
   const handleFinalClick = () => {
     setShowFinalMessage(true);
     triggerKissRain();
+  };
+
+  const nextQuestion = () => {
+    setCurrentQuestion((prev) => (prev + 1) % naughtyQuestions.length);
+    setSelectedAnswer(null);
+  };
+
+  const prevQuestion = () => {
+    setCurrentQuestion((prev) => (prev - 1 + naughtyQuestions.length) % naughtyQuestions.length);
+    setSelectedAnswer(null);
+  };
+
+  const selectAnswer = (answer: string) => {
+    setSelectedAnswer(answer);
+    triggerKissRain();
+    
+    // Special effect for chocolate Karan question
+    if (currentQuestion === 6) { // 7th question (index 6)
+      setShowChocolateKaran(true);
+      setTimeout(() => setShowChocolateKaran(false), 8000);
+    }
+  };
+
+  const handleChocolateMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    const y = ((e.clientX - rect.left) / rect.width - 0.5) * -2;
+    setChocolateRotation({ x, y });
   };
 
   return (
@@ -358,6 +405,211 @@ export default function KissDay() {
               </span>
             </motion.button>
           </motion.div>
+
+          {/* Naughty Questions Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mb-8"
+          >
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-w-4xl mx-auto border-2 border-pink-300/30">
+              <h3 className="text-2xl md:text-3xl font-bold text-pink-400 mb-6 text-center" 
+                  style={{ fontFamily: 'var(--font-dancing)' }}>
+                Naughty Kiss Questions 😏
+              </h3>
+              
+              <div className="relative">
+                <motion.div
+                  key={currentQuestion}
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-6"
+                >
+                  <h4 className="text-xl md:text-2xl font-bold text-white mb-4">
+                    {naughtyQuestions[currentQuestion].question}
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    {naughtyQuestions[currentQuestion].options.map((option, index) => (
+                      <motion.button
+                        key={index}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => selectAnswer(option)}
+                        className={`p-3 rounded-lg text-sm md:text-base font-medium transition-all ${
+                          selectedAnswer === option 
+                            ? 'bg-pink-500 text-white shadow-lg' 
+                            : 'bg-white/20 text-white hover:bg-white/30'
+                        }`}
+                      >
+                        {option}
+                      </motion.button>
+                    ))}
+                  </div>
+                  
+                  {selectedAnswer && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-pink-300 text-lg mt-4"
+                      style={{ fontFamily: 'var(--font-pacifico)' }}
+                    >
+                      Ooh, I like your answer! 😘 {selectedAnswer}
+                    </motion.p>
+                  )}
+                </motion.div>
+
+                {/* Question Navigation */}
+                <div className="flex justify-between items-center">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={prevQuestion}
+                    className="p-3 bg-pink-500/20 rounded-full text-white hover:bg-pink-500/30 transition-colors"
+                  >
+                    <ChevronLeft size={24} />
+                  </motion.button>
+                  
+                  <div className="flex gap-2">
+                    {naughtyQuestions.map((_, index) => (
+                      <motion.div
+                        key={index}
+                        className={`w-2 h-2 rounded-full ${
+                          index === currentQuestion ? 'bg-pink-400' : 'bg-white/30'
+                        }`}
+                        whileHover={{ scale: 1.5 }}
+                        onClick={() => {
+                          setCurrentQuestion(index);
+                          setSelectedAnswer(null);
+                        }}
+                      />
+                    ))}
+                  </div>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={nextQuestion}
+                    className="p-3 bg-pink-500/20 rounded-full text-white hover:bg-pink-500/30 transition-colors"
+                  >
+                    <ChevronRight size={24} />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 3D Chocolate Karan Effect */}
+          <AnimatePresence>
+            {showChocolateKaran && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+              >
+                <motion.div
+                  initial={{ rotateY: 0 }}
+                  animate={{ rotateY: 360 }}
+                  transition={{ duration: 2, repeat: 2, ease: "linear" }}
+                  className="relative"
+                  style={{ 
+                    transformStyle: 'preserve-3d',
+                    perspective: '1000px'
+                  }}
+                  onMouseMove={handleChocolateMouseMove}
+                >
+                  <div className="relative w-64 h-64 md:w-80 md:h-80">
+                    {/* Chocolate Body */}
+                    <motion.div
+                      animate={{ 
+                        rotateX: chocolateRotation.x * 20,
+                        rotateY: chocolateRotation.y * 20
+                      }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      className="absolute inset-0 bg-gradient-to-br from-amber-700 via-amber-800 to-amber-900 rounded-2xl shadow-2xl border-4 border-amber-600"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2)'
+                      }}
+                    >
+                      {/* Chocolate Texture */}
+                      <div className="absolute inset-0 rounded-2xl opacity-30">
+                        <div className="grid grid-cols-4 grid-rows-4 h-full">
+                          {Array.from({ length: 16 }, (_, i) => (
+                            <div
+                              key={i}
+                              className="border border-amber-600/20"
+                              style={{
+                                background: `radial-gradient(circle at ${Math.random() * 100}% ${Math.random() * 100}%, rgba(255,255,255,0.1) 0%, transparent 70%)`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Chocolate Drips */}
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-6xl">🍫</div>
+                      <div className="absolute -bottom-4 right-4 text-4xl">🍯</div>
+                      <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 text-4xl">🍫</div>
+                      
+                      {/* Karan Label */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.div
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="text-white text-2xl md:text-3xl font-bold text-center"
+                          style={{ fontFamily: 'var(--font-lobster)' }}
+                        >
+                          🍫 Karan 🍫
+                          <div className="text-sm md:text-base mt-2">Chocolate Boy</div>
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                    
+                    {/* Floating Hearts Around Chocolate */}
+                    {[...Array(8)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ 
+                          opacity: [0, 1, 0],
+                          scale: [0, 1, 0],
+                          rotate: [0, 360]
+                        }}
+                        transition={{ 
+                          duration: 3,
+                          repeat: Infinity,
+                          delay: i * 0.3
+                        }}
+                        className="absolute text-2xl"
+                        style={{
+                          top: `${50 + Math.cos((i * Math.PI * 2) / 8) * 60}%`,
+                          left: `${50 + Math.sin((i * Math.PI * 2) / 8) * 60}%`,
+                          transform: 'translate(-50%, -50%)'
+                        }}
+                      >
+                        💋
+                      </motion.div>
+                    ))}
+                  </div>
+                  
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-white text-center bg-pink-500/80 px-6 py-3 rounded-full"
+                    style={{ fontFamily: 'var(--font-pacifico)' }}
+                  >
+                    Lick me everywhere, Anuu! 😋
+                  </motion.p>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Final Message */}
           <AnimatePresence>
