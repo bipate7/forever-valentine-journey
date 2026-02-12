@@ -1,50 +1,210 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Lock, Calendar, Heart, HeartHandshake } from "lucide-react";
+import { Heart, MusicIcon, Sparkles, Star, ChevronLeft, ChevronRight, ImageIcon, Play, Pause, ArrowLeft, HeartHandshake } from "lucide-react";
+import { useMusic } from "@/contexts/MusicContext";
+import confetti from "canvas-confetti";
+
+const kissMessages = [
+  "Every kiss is a poem written on your lips",
+  "Your kisses are the sweetest addiction I've ever known",
+  "In your arms, every kiss feels like coming home",
+  "A thousand kisses from you would never be enough",
+  "Your kisses taste like forever and always",
+  "Every kiss with you is a moment of pure magic",
+  "Your lips are the home my heart has been searching for",
+  "Kissing you is my favorite kind of heaven",
+  "Your kisses make my world stop spinning",
+  "Every kiss from you is a promise of forever",
+  "Your kisses are the stars that light up my night",
+  "In your kisses, I found my forever love"
+];
+
+const kissMoments = [
+  { id: 1, title: "First Kiss", description: "The moment our souls touched", emoji: "💏" },
+  { id: 2, title: "Morning Kisses", description: "Sweet good morning wishes", emoji: "☀️" },
+  { id: 3, title: "Goodnight Kisses", description: "Dreams of you all night", emoji: "🌙" },
+  { id: 4, title: "Surprise Kisses", description: "When you steal my heart", emoji: "😘" },
+  { id: 5, title: "Passionate Kisses", description: "Fireworks in my soul", emoji: "🔥" },
+  { id: 6, title: "Gentle Kisses", description: "Soft as butterfly wings", emoji: "🦋" }
+];
 
 export default function KissDay() {
-  const [countdown, setCountdown] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
+  const { isPlaying, playMusic } = useMusic();
+  const [showFinalMessage, setShowFinalMessage] = useState(false);
+  const [hearts, setHearts] = useState<Array<{ id: number; x: number; y: number; size: number }>>([]);
+  const [sparkles, setSparkles] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const [currentMessage, setCurrentMessage] = useState(0);
+  const [showKissRain, setShowKissRain] = useState(false);
+  const [currentMoment, setCurrentMoment] = useState(0);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
-    // Calculate time until February 13 (Kiss Day)
-    const targetDate = new Date();
-    targetDate.setMonth(1, 13); // February 13
-    targetDate.setFullYear(targetDate.getFullYear());
-    if (targetDate < new Date()) {
-      targetDate.setFullYear(targetDate.getFullYear() + 1);
-    }
-    targetDate.setHours(0, 0, 0, 0);
+    // Create floating hearts
+    const heartArray = Array.from({ length: 25 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 90 + 5,
+      y: Math.random() * 80 + 10,
+      size: Math.random() * 25 + 15
+    }));
+    setHearts(heartArray);
 
-    const timer = setInterval(() => {
-      const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
+    // Create floating sparkles
+    const sparkleArray = Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 90 + 5,
+      y: Math.random() * 80 + 10
+    }));
+    setSparkles(sparkleArray);
 
-      if (difference > 0) {
-        setCountdown({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((difference % (1000 * 60)) / 1000)
-        });
-      } else {
-        clearInterval(timer);
+    // Rotate messages
+    const messageInterval = setInterval(() => {
+      setCurrentMessage(prev => (prev + 1) % kissMessages.length);
+    }, 4000);
+
+    // Mouse tracking
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // Handle first user interaction to start music
+    const handleFirstInteraction = () => {
+      if (!hasInteracted && !isPlaying) {
+        playMusic();
+        setHasInteracted(true);
+        console.log("Music started on user interaction");
       }
-    }, 1000);
+    };
 
-    return () => clearInterval(timer);
-  }, []);
+    window.addEventListener('click', handleFirstInteraction, { once: true });
+
+    return () => {
+      clearInterval(messageInterval);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('click', handleFirstInteraction);
+    };
+  }, [isPlaying, hasInteracted, playMusic]);
+
+  const triggerKissRain = () => {
+    setShowKissRain(true);
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#FF69B4', '#FF1493', '#FF6B9D', '#C71585', '#FFB6C1', '#FFC0CB']
+    });
+    
+    setTimeout(() => {
+      setShowKissRain(false);
+    }, 5000);
+  };
+
+  const nextMoment = () => {
+    setCurrentMoment((prev) => (prev + 1) % kissMoments.length);
+  };
+
+  const prevMoment = () => {
+    setCurrentMoment((prev) => (prev - 1 + kissMoments.length) % kissMoments.length);
+  };
+
+  const handleFinalClick = () => {
+    setShowFinalMessage(true);
+    triggerKissRain();
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 via-pink-900 to-purple-900 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
+    <div className="min-h-screen bg-gradient-to-br from-pink-950 via-red-950 to-purple-950 overflow-hidden relative">
+      {/* Floating Hearts Background */}
+      {hearts.map(heart => (
+        <motion.div
+          key={heart.id}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ 
+            opacity: [0, 0.3, 0.6, 0.3, 0],
+            scale: [0, 1, 1.2, 1, 0],
+            y: [0, -100, -200]
+          }}
+          transition={{ 
+            duration: 8 + Math.random() * 4,
+            repeat: Infinity,
+            delay: Math.random() * 5
+          }}
+          className="absolute text-2xl md:text-4xl"
+          style={{ 
+            left: `${heart.x}%`,
+            top: `${heart.y}%`,
+            fontSize: `${heart.size}px`
+          }}
+        >
+          💋
+        </motion.div>
+      ))}
+
+      {/* Floating Sparkles Background */}
+      {sparkles.map(sparkle => (
+        <motion.div
+          key={sparkle.id}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ 
+            opacity: [0, 1, 0],
+            scale: [0, 1, 0],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ 
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: Math.random() * 2
+          }}
+          className="absolute text-xl md:text-3xl"
+          style={{ 
+            left: `${sparkle.x}%`,
+            top: `${sparkle.y}%`
+          }}
+        >
+          ✨
+        </motion.div>
+      ))}
+
+      {/* Kiss Rain Effect */}
+      <AnimatePresence>
+        {showKissRain && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 pointer-events-none z-50"
+          >
+            {Array.from({ length: 50 }, (_, i) => (
+              <motion.div
+                key={i}
+                initial={{ 
+                  x: Math.random() * window.innerWidth,
+                  y: -50,
+                  opacity: 1
+                }}
+                animate={{ 
+                  y: window.innerHeight + 50,
+                  opacity: [1, 1, 0],
+                  rotate: [0, 360]
+                }}
+                transition={{ 
+                  duration: 3 + Math.random() * 2,
+                  delay: Math.random() * 2
+                }}
+                className="absolute text-2xl md:text-4xl"
+              >
+                💋
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Navigation */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -55,152 +215,193 @@ export default function KissDay() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all text-white"
+              className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-shadow"
             >
-              <ArrowLeft size={20} />
-              <span className="font-medium">Back to Valentine Week</span>
+              <ArrowLeft size={20} className="text-pink-500" />
+              <span className="text-gray-700 font-medium">Back to Valentine Week</span>
             </motion.button>
           </Link>
         </motion.div>
 
-        {/* Locked Content */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white/10 backdrop-blur-md rounded-3xl p-8 md:p-12 shadow-2xl border-2 border-white/20 text-center"
-        >
-          {/* Lock Icon */}
+        {/* Main Content */}
+        <div className="text-center max-w-6xl mx-auto">
+          {/* Date Badge */}
           <motion.div
-            animate={{ 
-              scale: [1, 1.1, 1],
-              rotate: [0, 5, -5, 0]
-            }}
-            transition={{ 
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-red-400 to-pink-400 rounded-full flex items-center justify-center shadow-xl"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
           >
-            <Lock size={48} className="text-white" />
-          </motion.div>
-
-          {/* Kiss Icon */}
-          <motion.div
-            animate={{ 
-              y: [0, -5, 0],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{ 
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="w-16 h-16 mx-auto mb-4 text-red-400"
-          >
-            <HeartHandshake size={64} />
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-400 to-red-500 text-white rounded-full shadow-lg">
+              <div className="text-2xl">💋</div>
+              <span className="font-bold text-lg">February 13 - Kiss Day</span>
+              <div className="text-2xl">💋</div>
+            </div>
           </motion.div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-lobster)' }}>
-            Coming Soon!
-          </h1>
+          <motion.h1
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl lg:text-8xl font-bold bg-gradient-to-r from-pink-500 via-red-500 to-purple-500 bg-clip-text text-transparent mb-8 md:mb-12 text-center px-4"
+            style={{ fontFamily: 'var(--font-lobster)' }}
+          >
+            Sweet Kisses for My Anuu
+          </motion.h1>
 
-          {/* Date */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <Calendar className="text-red-400" size={24} />
-            <span className="text-xl text-red-400 font-medium">
-              February 13 - Kiss Day
-            </span>
-          </div>
+          {/* Rotating Kiss Message */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-8"
+          >
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-2xl max-w-4xl mx-auto border-2 border-pink-300/30">
+              <motion.p
+                key={currentMessage}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-xl md:text-2xl text-white leading-relaxed font-medium text-center px-4" 
+                style={{ fontFamily: 'var(--font-pacifico)' }}
+              >
+                {kissMessages[currentMessage]}
+              </motion.p>
+            </div>
+          </motion.div>
 
-          {/* Message */}
-          <p className="text-lg text-white/80 mb-8" style={{ fontFamily: 'var(--font-quicksand)' }}>
-            Sweet kisses are being prepared for you, my love. 
-            This day will be filled with tender moments and romantic surprises!
-          </p>
+          {/* Kiss Moments Carousel */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-8"
+          >
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-w-4xl mx-auto border-2 border-pink-300/30">
+              <h3 className="text-2xl md:text-3xl font-bold text-pink-400 mb-6 text-center" 
+                  style={{ fontFamily: 'var(--font-dancing)' }}>
+                Our Kiss Moments 💕
+              </h3>
+              
+              <div className="relative">
+                <motion.div
+                  key={currentMoment}
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center"
+                >
+                  <div className="text-6xl md:text-8xl mb-4">
+                    {kissMoments[currentMoment].emoji}
+                  </div>
+                  <h4 className="text-xl md:text-2xl font-bold text-white mb-2">
+                    {kissMoments[currentMoment].title}
+                  </h4>
+                  <p className="text-white/80 text-lg">
+                    {kissMoments[currentMoment].description}
+                  </p>
+                </motion.div>
 
-          {/* Countdown */}
-          <div className="bg-black/30 rounded-2xl p-6 mb-8">
-            <h3 className="text-xl font-bold text-red-400 mb-4">Unlock In:</h3>
-            <div className="grid grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">{countdown.days}</div>
-                <div className="text-sm text-white/60">Days</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">{countdown.hours}</div>
-                <div className="text-sm text-white/60">Hours</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">{countdown.minutes}</div>
-                <div className="text-sm text-white/60">Minutes</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">{countdown.seconds}</div>
-                <div className="text-sm text-white/60">Seconds</div>
+                {/* Navigation Buttons */}
+                <div className="flex justify-between items-center mt-6">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={prevMoment}
+                    className="p-3 bg-pink-500/20 rounded-full text-white hover:bg-pink-500/30 transition-colors"
+                  >
+                    <ChevronLeft size={24} />
+                  </motion.button>
+                  
+                  <div className="flex gap-2">
+                    {kissMoments.map((_, index) => (
+                      <motion.div
+                        key={index}
+                        className={`w-2 h-2 rounded-full ${
+                          index === currentMoment ? 'bg-pink-400' : 'bg-white/30'
+                        }`}
+                        whileHover={{ scale: 1.5 }}
+                        onClick={() => setCurrentMoment(index)}
+                      />
+                    ))}
+                  </div>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={nextMoment}
+                    className="p-3 bg-pink-500/20 rounded-full text-white hover:bg-pink-500/30 transition-colors"
+                  >
+                    <ChevronRight size={24} />
+                  </motion.button>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Kiss Animation */}
-          <div className="flex justify-center gap-4 mb-8">
-            {[...Array(5)].map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 1, 0.5]
-                }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.2,
-                  ease: "easeInOut"
-                }}
-                className="text-2xl"
-              >
-                💋
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Back Button */}
-          <Link href="/">
+          {/* Interactive Kiss Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mb-8"
+          >
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-all"
+              onClick={triggerKissRain}
+              className="px-8 py-4 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 font-bold text-lg"
             >
-              Return to Valentine's Day 💋
+              <span className="flex items-center gap-2">
+                <HeartHandshake size={24} />
+                Send Virtual Kisses 💋
+              </span>
             </motion.button>
-          </Link>
-        </motion.div>
-
-        {/* Floating Kisses Background */}
-        {[...Array(8)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{ 
-              y: [100, -20, 100],
-              opacity: [0, 1, 0],
-              x: [0, Math.random() * 100 - 50, 0]
-            }}
-            transition={{ 
-              duration: 4 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
-            className="absolute text-4xl opacity-30"
-            style={{ 
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`
-            }}
-          >
-            💋
           </motion.div>
-        ))}
+
+          {/* Final Message */}
+          <AnimatePresence>
+            {showFinalMessage && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-w-4xl mx-auto border-2 border-pink-300/30"
+              >
+                <h3 className="text-2xl md:text-3xl font-bold text-pink-400 mb-4 text-center" 
+                    style={{ fontFamily: 'var(--font-dancing)' }}>
+                  My Forever Kiss 💕
+                </h3>
+                <p className="text-white text-lg leading-relaxed text-center">
+                  Every kiss with you is a promise of forever, my Anuu. 
+                  Your lips are the poetry my heart has been waiting to read. 
+                  I love you more than words can express, and I can't wait to kiss you tomorrow on Valentine's Day! 💋
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Music Control */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="mt-8 flex justify-center"
+          >
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={playMusic}
+              className="p-4 bg-white/10 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all"
+            >
+              {isPlaying ? (
+                <Pause size={24} className="text-pink-400" />
+              ) : (
+                <Play size={24} className="text-pink-400" />
+              )}
+            </motion.button>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
