@@ -58,10 +58,17 @@ export default function KissDay() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showChocolateKaran, setShowChocolateKaran] = useState(false);
   const [chocolateRotation, setChocolateRotation] = useState({ x: 0, y: 0 });
+  const [savedAnswers, setSavedAnswers] = useState<Array<{question: string, answer: string}>>([]);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
+    // Load saved answers from localStorage
+    const stored = localStorage.getItem('kissDayAnswers');
+    if (stored) {
+      setSavedAnswers(JSON.parse(stored));
+    }
+
     // Create floating hearts
     const heartArray = Array.from({ length: 25 }, (_, i) => ({
       id: i,
@@ -148,6 +155,15 @@ export default function KissDay() {
   const selectAnswer = (answer: string) => {
     setSelectedAnswer(answer);
     triggerKissRain();
+    
+    // Save answer to localStorage
+    const newAnswer = {
+      question: naughtyQuestions[currentQuestion].question,
+      answer: answer
+    };
+    const updatedAnswers = [...savedAnswers.filter(a => a.question !== newAnswer.question), newAnswer];
+    setSavedAnswers(updatedAnswers);
+    localStorage.setItem('kissDayAnswers', JSON.stringify(updatedAnswers));
     
     // Special effect for chocolate Karan question
     if (currentQuestion === 6) { // 7th question (index 6)

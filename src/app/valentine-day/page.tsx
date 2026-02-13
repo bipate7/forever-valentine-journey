@@ -818,7 +818,10 @@ export default function ValentineDay() {
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 2, repeat: Infinity }}
                           className="text-white text-xl md:text-2xl font-bold text-center"
-                          style={{ fontFamily: 'var(--font-lobster)' }}
+                          style={{ 
+                            fontFamily: 'var(--font-lobster)',
+                            transform: 'rotateY(0deg)'
+                          }}
                         >
                           {"💕 I Love Youuuuu Anuuu <3 💕"}
                         </motion.div>
@@ -866,6 +869,39 @@ export default function ValentineDay() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Hello Message */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            className="mb-8"
+          >
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-w-4xl mx-auto border-2 border-pink-300/30">
+              <h3 className="text-2xl md:text-3xl font-bold text-pink-400 mb-6 text-center leading-relaxed" 
+                  style={{ fontFamily: 'var(--font-dancing)' }}>
+                Hieee My Most Favourite pilluuu 💋, My Whole Heart Thank YOuu Nehmiii Support Karaila, Thank you samjun ghailaaa pnn, ikadechh sagada expresss nhi karelll jevaa gharii bhetunnn tevaaa karelll aramt mastt!!!!<br/><br/>
+                
+                AJ apan apleee 1198 days kele means 3 Year, 3 months, 10 days of toghternessss asehc ajunnn infinite years complete karaiche ahettt.<br/><br/>
+                
+                Tyat maza kadna je khi karat yeil sagada karel A to Z , to related konti pn gosta asel tr nhi manat nhi tu know very welll.<br/><br/>
+                
+                Nehmi asachh GOODDD smileee karat raahaaaa, tyaaa cuteeee smileee var tr alreadyyy flat ahee mii!!! 💋<br/><br/>
+                
+                Aj Varshii pn Last year pekshaa jastiii kissses, khupp sareee hugs, khuppp saraa firnaaa , khupp sarii tuuu pn pahejj and khup jastii sex 😊<br/><br/>
+                
+                Ajunn Bakii gostii asel te pn extraaa mideell khupp saara laad, khup sari mastii etcc!!<br/><br/>
+                
+                Manifesting to have a smal trip with you by the end of year!!!! 👀<br/><br/>
+                
+                Finally,<br/>
+                Happy Valentine's Day My Anu bb ❤️<br/>
+                I Loveeeeee Youuuuuu khup jastaa!!!! 💕❤️💋<br/><br/>
+                
+                I hateeeee youuuu pn khupp jastaaaaa 🤗❤️👀
+              </h3>
+            </div>
+          </motion.div>
 
           {/* Final Messages */}
           <div className="text-center">
